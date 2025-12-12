@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sonic Speedtest</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
+        body { font-family: 'Outfit', sans-serif; }
+        .gauge-circle {
+            transition: stroke-dashoffset 0.3s ease;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-white min-h-screen flex flex-col items-center justify-center p-4">
+
+    <!-- Header -->
+    <header class="absolute top-0 w-full p-6 flex justify-between items-center opacity-80">
+        <h1 class="text-2xl font-bold tracking-wider text-cyan-400">SONIC<span class="text-white">SPEED</span></h1>
+        <div class="text-xs text-slate-400">SERVER: LOCALHOST</div>
+    </header>
+
+    <!-- Main Display -->
+    <main class="w-full max-w-4xl grid grid-cols-1 md:grid-cols-3 gap-8 text-center relative z-10">
+        
+        <!-- PING -->
+        <div class="bg-slate-800/50 backdrop-blur-md border border-slate-700 rounded-2xl p-6 flex flex-col items-center justify-center shadow-lg hover:border-cyan-500/50 transition-colors">
+            <h2 class="text-slate-400 text-sm uppercase tracking-widest mb-2">Ping</h2>
+            <div class="text-4xl font-bold flex items-end">
+                <span id="pingVal">--</span>
+                <span class="text-lg text-slate-500 ml-1 font-normal mb-1">ms</span>
+            </div>
+            <div class="text-xs text-slate-500 mt-2">Jitter: <span id="jitterVal">--</span> ms</div>
+        </div>
+
+        <!-- MAIN GAUGE (DOWNLOAD) -->
+        <div class="md:col-span-1 flex flex-col items-center justify-center relative">
+            <div class="relative w-64 h-64 flex items-center justify-center">
+                 <!-- SVG Gauge -->
+                 <svg class="absolute w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="45" fill="none" stroke="#1e293b" stroke-width="6" />
+                    <circle id="speedGauge" cx="50" cy="50" r="45" fill="none" stroke="#22d3ee" stroke-width="6"
+                            stroke-dasharray="283" stroke-dashoffset="283" stroke-linecap="round" class="gauge-circle" />
+                </svg>
+                <div class="z-10 text-center">
+                    <div id="mainSpeedVal" class="text-6xl font-bold tracking-tighter text-white drop-shadow-[0_0_15px_rgba(34,211,238,0.5)]">0.0</div>
+                    <div class="text-cyan-400 text-sm font-semibold tracking-widest mt-1">Mbps</div>
+                </div>
+            </div>
+            
+            <button id="startBtn" onclick="startTest()" class="mt-8 px-12 py-4 bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-bold rounded-full shadow-[0_0_20px_rgba(34,211,238,0.3)] transition-all transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
+                GO
+            </button>
+            <div id="statusText" class="mt-4 text-cyan-400 h-6 text-sm animate-pulse font-mono"></div>
+        </div>
+
+        <!-- UPLOAD -->
+        <div class="bg-slate-800/50 backdrop-blur-md border border-slate-700 rounded-2xl p-6 flex flex-col items-center justify-center shadow-lg hover:border-purple-500/50 transition-colors">
+            <h2 class="text-slate-400 text-sm uppercase tracking-widest mb-2">Upload</h2>
+            <div class="text-4xl font-bold flex items-end">
+                <span id="uploadVal">--</span>
+                <span class="text-lg text-slate-500 ml-1 font-normal mb-1">Mbps</span>
+            </div>
+            <div class="text-xs text-slate-500 mt-2 opacity-0">.</div> 
+        </div>
+
+    </main>
+
+    <!-- Footer Stats / Meta -->
+    <div class="absolute bottom-8 text-slate-500 text-xs flex gap-6">
+        <span>provider: Local Network</span>
+        <span>host: Golang Native</span>
+    </div>
+
+    <!-- Logic -->
+    <script>
+        const API = {
+            ping: '/api/ping',
+            download: '/api/download',
+            upload: '/api/upload'
+        };
+
+        const ELS = {
+            startBtn: document.getElementById('startBtn'),
+            status: document.getElementById('statusText'),
+            ping: document.getElementById('pingVal'),
+            jitter: document.getElementById('jitterVal'),
+            mainSpeed: document.getElementById('mainSpeedVal'),
+            upload: document.getElementById('uploadVal'),
+            gauge: document.getElementById('speedGauge')
+        };
+
+        const GAUGE_CIRCUMFERENCE = 283;
+        
+        function setGauge(percentage) {
+            const offset = GAUGE_CIRCUMFERENCE - (percentage / 100 * GAUGE_CIRCUMFERENCE);
+            ELS.gauge.style.strokeDashoffset = offset;
+        }
+
+        // Helper to format Mbps
+        const fmtSpeed = (mbps) => mbps.toFixed(1);
+
+        async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+        async function runPing() {
+            ELS.status.innerText = "MEASURING PING...";
+            const pings = [];
+            for(let i=0; i<10; i++) {
+                const start = performance.now();
+                await fetch(`${API.ping}?nocache=${start}`);
+                const end = performance.now();
+                pings.push(end - start);
+                await sleep(50);
+            }
+            
+            const min = Math.min(...pings);
+            const avg = pings.reduce((a,b)=>a+b,0) / pings.length;
+            
+            // Jitter = average absolute deviation from mean
+            const jitter = pings.reduce((a,b)=>a+Math.abs(b-avg),0) / pings.length;
+
+            ELS.ping.innerText = min.toFixed(0);
+            ELS.jitter.innerText = jitter.toFixed(1);
+            
+            return { min, jitter };
+        }
+
+        async function runDownload() {
+            ELS.status.innerText = "MEASURING DOWNLOAD...";
+            ELS.gauge.style.stroke = "#22d3ee"; // Cyan for download
+
+            // We'll run parallel fetches to saturate the link
+            const threads = 4;
+            const targetDuration = 5000; // ms
+            const bufferSize = 4 * 1024 * 1024; // 4MB chunks requested repeatedly
+            
+            let totalBytes = 0;
+            let startTime = performance.now();
+            let running = true;
+
+            // Update UI loop
+            const uiInterval = setInterval(() => {
+                const now = performance.now();
+                const duration = (now - startTime) / 1000;
+                if (!duration) return;
+                const speedBps = (totalBytes * 8) / duration;
+                const speedMbps = speedBps / 1000000;
+                
+                ELS.mainSpeed.innerText = fmtSpeed(speedMbps);
+                
+                // Visual gauge mapping (0-100 mbps log scale or linear approx for now)
+                // Let's do linear 0-100 for simplicity, clamp at 100+
+                // Or better, let's make it dynamic up to 1000
+                const percent = Math.min((speedMbps / 1000) * 100, 100); 
+                setGauge(percent);
+            }, 100);
+
+            // Fetch Worker
+            const worker = async () => {
+                while(running && (performance.now() - startTime) < targetDuration) {
+                    try {
+                        const response = await fetch(`${API.download}?size=${bufferSize}&nocache=${Date.now()}`);
+                        const reader = response.body.getReader();
+                        while(true) {
+                            const {done, value} = await reader.read();
+                            if (done) break;
+                            totalBytes += value.length;
+                            if (!running) {
+                                reader.cancel();
+                                break;
+                            }
+                        }
+                    } catch(e) { console.error(e); break; }
+                }
+            };
+
+            await Promise.all(Array(threads).fill(null).map(worker));
+            
+            running = false;
+            clearInterval(uiInterval);
+            
+            const finalDuration = (performance.now() - startTime) / 1000;
+            const finalSpeedMbps = ((totalBytes * 8) / finalDuration) / 1000000;
+            
+            ELS.mainSpeed.innerText = fmtSpeed(finalSpeedMbps);
+            setGauge(0);
+            return finalSpeedMbps;
+        }
+
+        async function runUpload() {
+            ELS.status.innerText = "PREPARING UPLOAD...";
+            ELS.mainSpeed.innerText = "0.0";
+            ELS.gauge.style.stroke = "#a855f7"; // Purple for upload
+            await sleep(500);
+
+            ELS.status.innerText = "MEASURING UPLOAD...";
+            
+            // 20MB payload repeated
+            const size = 10 * 1024 * 1024; 
+            const payload = new Uint8Array(size); // Zeroes are fine, just need bytes
+            const blob = new Blob([payload]);
+
+            const threads = 3; 
+            const targetDuration = 5000;
+            let totalBytes = 0;
+            let startTime = performance.now();
+            let running = true;
+
+            const uiInterval = setInterval(() => {
+                const now = performance.now();
+                const duration = (now - startTime) / 1000;
+                if(duration <= 0) return;
+                const speedBps = (totalBytes * 8) / duration;
+                const speedMbps = speedBps / 1000000;
+                
+                ELS.mainSpeed.innerText = fmtSpeed(speedMbps);
+                const percent = Math.min((speedMbps / 1000) * 100, 100); 
+                setGauge(percent);
+            }, 100);
+
+            const worker = async () => {
+                while(running && (performance.now() - startTime) < targetDuration) {
+                    const startUpload = performance.now();
+                    try {
+                        await fetch(API.upload, {
+                            method: 'POST',
+                            body: blob,
+                            cache: 'no-store'
+                        });
+                        if(!running) break;
+                        totalBytes += size;
+                    } catch(e) { console.error(e); break; }
+                }
+            };
+
+            await Promise.all(Array(threads).fill(null).map(worker));
+            
+            running = false;
+            clearInterval(uiInterval);
+            
+            const finalDuration = (performance.now() - startTime) / 1000;
+            const finalSpeedMbps = ((totalBytes * 8) / finalDuration) / 1000000;
+
+            ELS.upload.innerText = fmtSpeed(finalSpeedMbps);
+            ELS.mainSpeed.innerText = "--"; // Reset main gauge
+            setGauge(0);
+            return finalSpeedMbps;
+        }
+
+        async function startTest() {
+            if(ELS.startBtn.disabled) return;
+            ELS.startBtn.disabled = true;
+            ELS.startBtn.innerText = "RUNNING";
+            
+            // Reset
+            ELS.ping.innerText = "--";
+            ELS.jitter.innerText = "--";
+            ELS.mainSpeed.innerText = "0.0";
+            ELS.upload.innerText = "--";
+
+            try {
+                // 1. Ping
+                await runPing();
+                await sleep(500);
+
+                // 2. Download
+                const dlSpeed = await runDownload();
+                // Persist the download result in the text? Maybe not, usually main gauge shows result.
+                // But we reset main gauge for upload. Let's briefly show it or keep it?
+                // Standard UI behavior: Keep DL speed in a small box if needed, or just let users see result at end.
+                // Let's reuse the main gauge for the "Main Metric" of the current phase.
+                // For final result, many tests show both in small boxes. 
+                // Let's hack: Put DL result in the main text for now, but when Upload starts, move it?
+                // For simplicity, we just leave it in the main gauge until Upload starts.
+                
+                await sleep(1000); // Pause to admire the DL speed
+
+                // 3. Upload
+                await runUpload();
+
+                ELS.status.innerText = "TEST COMPLETE";
+            } catch(e) {
+                console.error(e);
+                ELS.status.innerText = "ERROR";
+            } finally {
+                ELS.startBtn.disabled = false;
+                ELS.startBtn.innerText = "GO";
+                ELS.gauge.style.stroke = "#22d3ee"; // Reset color
+            }
+        }
+    </script>
+</body>
+</html>
