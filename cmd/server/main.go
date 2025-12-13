@@ -3,7 +3,8 @@ package main
 import (
 	"log"
 	"net/http"
-	"speedtest-server/internal/handlers"
+
+	"github.com/muktadirhassan/sonic/internal/handlers"
 )
 
 func main() {
