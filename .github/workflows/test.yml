@@ -24,4 +24,4 @@ jobs:
         run: go build -v ./cmd/server
 
       - name: Build CLI
-        run: go build -v ./cmd/client-cli
+        run: go build -v ./cmd/cli
