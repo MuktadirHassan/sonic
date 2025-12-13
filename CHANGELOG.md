@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.2](https://github.com/MuktadirHassan/sonic/compare/sonic-v0.1.1...sonic-v0.1.2) (2025-12-13)
+
+
+### Bug Fixes
+
+* **ci:** add workflow dispatch for binary releases ([95b6ab9](https://github.com/MuktadirHassan/sonic/commit/95b6ab9a9bad3ffdb9ff471f941a898834b21b72))
+* **ci:** removed go.sum from Dockerfile, as we don't have any dependencies ([03f4f75](https://github.com/MuktadirHassan/sonic/commit/03f4f75dfbfdfd204b1838f081f5c850fdae2f8d))
+
 ## [0.1.1](https://github.com/MuktadirHassan/sonic/compare/sonic-v0.1.0...sonic-v0.1.1) (2025-12-13)
 
 
