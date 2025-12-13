@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.5](https://github.com/MuktadirHassan/sonic/compare/v0.1.4...v0.1.5) (2025-12-13)
+
+
+### Features
+
+* add MIT license file ([0a04f12](https://github.com/MuktadirHassan/sonic/commit/0a04f1229b3538a0f616c07da7658a43bfe27a5a))
+
 ## [0.1.4](https://github.com/MuktadirHassan/sonic/compare/v0.1.3...v0.1.4) (2025-12-13)
 
 
