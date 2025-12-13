@@ -48,7 +48,7 @@ Expand-Archive sonic-server.zip
 #### Option 1: Go Install (Easiest)
 
 ```bash
-go install github.com/muktadirhassan/sonic/cmd/client-cli@latest
+go install github.com/muktadirhassan/sonic/cmd/cli@latest
 sonic-cli --server http://localhost:8080
 ```
 
@@ -89,7 +89,7 @@ go build -o sonic-server ./cmd/server
 
 ```bash
 # Build the CLI
-go build -o sonic-cli ./cmd/client-cli
+go build -o sonic-cli ./cmd/cli
 
 # Run a test
 ./sonic-cli
@@ -121,7 +121,7 @@ go test ./...
 go build -o sonic-server ./cmd/server
 
 # CLI
-go build -o sonic-cli ./cmd/client-cli
+go build -o sonic-cli ./cmd/cli
 
 # Docker
 docker build -t sonic .

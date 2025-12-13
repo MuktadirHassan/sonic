@@ -21,7 +21,7 @@ builds:
       - -s -w -X main.version={{.Version}}
 
   - id: cli
-    main: ./cmd/client-cli
+    main: ./cmd/cli
     binary: sonic-cli
     env:
       - CGO_ENABLED=0
