@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.6](https://github.com/MuktadirHassan/sonic/compare/v0.1.5...v0.1.6) (2025-12-13)
+
+
+### Bug Fixes
+
+* update module path to match repository ([46fd5cf](https://github.com/MuktadirHassan/sonic/commit/46fd5cfb3c6208bc6c82b09c21e781fdb07c77c6))
+
 ## [0.1.5](https://github.com/MuktadirHassan/sonic/compare/v0.1.4...v0.1.5) (2025-12-13)
 
 
