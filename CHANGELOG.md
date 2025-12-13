@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.3](https://github.com/MuktadirHassan/sonic/compare/sonic-v0.1.2...sonic-v0.1.3) (2025-12-13)
+
+
+### Bug Fixes
+
+* **ci:** update releaser config, and image version ([1acb04e](https://github.com/MuktadirHassan/sonic/commit/1acb04ec97c646fef00936d9e526a45a87c78a80))
+
 ## [0.1.2](https://github.com/MuktadirHassan/sonic/compare/sonic-v0.1.1...sonic-v0.1.2) (2025-12-13)
 
 
